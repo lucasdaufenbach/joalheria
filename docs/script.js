@@ -195,6 +195,7 @@ allSlides.forEach((s) => io.observe(s));
 // ---------- lightbox com pinça / zoom / arraste ----------
 const lb = document.getElementById("lightbox");
 const lbStage = document.getElementById("lbStage");
+const lbCard = document.getElementById("lbCard");
 const lbImg = document.getElementById("lbImg");
 const lbClose = document.getElementById("lbClose");
 const lbHint = document.getElementById("lbHint");
@@ -207,7 +208,7 @@ let panStart = null;                    // {x,y,tx,ty} no início do arraste
 let lastTap = 0;
 
 function applyTransform() {
-  lbImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+  lbCard.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
 }
 function resetTransform() { scale = 1; tx = 0; ty = 0; applyTransform(); }
 
