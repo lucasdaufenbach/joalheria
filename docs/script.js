@@ -74,6 +74,7 @@ function setActive(btn){
 
 const productsContainer = document.getElementById("products");
 const progressContainer = document.getElementById("progress");
+const gridWrap = document.getElementById("gridWrap");
 
 // hero dot
 progressContainer.appendChild(Object.assign(document.createElement("i"), { className: "active" }));
@@ -157,6 +158,19 @@ PRODUCTS.forEach((p, i) => {
   frame.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(p.image, p.name); }
   });
+
+  // cartão correspondente na grade
+  const gcard = document.createElement("button");
+  gcard.className = "gcard";
+  gcard.type = "button";
+  gcard.innerHTML = `
+    <div class="gframe"><img src="${p.image}" alt="${p.name}"></div>
+    <div class="gmeta">
+      <div class="gname">${p.name}</div>
+      <div class="gprice">a partir de ${estimate(p.idx10)}</div>
+    </div>`;
+  gcard.addEventListener("click", () => goToProduct(i));
+  gridWrap.appendChild(gcard);
 });
 
 // ---------- entrance animation + progress dots via IntersectionObserver ----------
@@ -311,4 +325,25 @@ confirmEl.addEventListener("click", (e) => { if (e.target === confirmEl) closeCo
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") { closeLightbox(); closeConfirm(); }
+});
+
+// ---------- alternância de visualização (um por vez / grade) ----------
+const viewToggle = document.getElementById("viewToggle");
+const feedEl = document.getElementById("feed");
+
+function setView(view) {
+  viewToggle.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
+  document.body.classList.toggle("mode-grid", view === "grid");
+}
+function goToProduct(i) {
+  setView("feed");
+  const slide = document.getElementById("p-" + i);
+  requestAnimationFrame(() => {
+    feedEl.scrollTo({ top: slide.offsetTop, behavior: "instant" });
+    slide.classList.add("in-view");
+  });
+}
+viewToggle.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (btn) setView(btn.dataset.view);
 });
