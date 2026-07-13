@@ -28,6 +28,20 @@ html,body{
 
 ::selection{ background:var(--gold); color:#0a2c22; }
 
+/* esconde a barra de rolagem padrão dos navegadores (mantém o scroll funcional) */
+html, body, .feed, .grid-view, .lb-stage{
+  scrollbar-width:none;        /* Firefox */
+  -ms-overflow-style:none;     /* IE / Edge antigo */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.feed::-webkit-scrollbar,
+.grid-view::-webkit-scrollbar,
+.lb-stage::-webkit-scrollbar{
+  display:none;                /* Chrome / Safari / Edge */
+  width:0; height:0;
+}
+
 /* ---------- feed ---------- */
 .feed{
   height:100dvh;
@@ -197,9 +211,15 @@ html,body{
 }
 .frame{
   position:relative;
-  width:min(94vw, 460px);  /* dimensionado pela largura: quase toca as laterais em qualquer tela */
-  aspect-ratio:1/1;
-  max-height:100%;         /* nunca ultrapassa a área disponível (evita sobrepor o texto) */
+  /* Largura responsiva (quase encosta nas laterais). A altura é o MENOR entre:
+     - a própria largura (para ficar quadrada quando há espaço), e
+     - a altura que sobra depois de reservar o texto: calc(100dvh - 505px).
+     Assim, em telas achatadas a moldura perde altura em vez de invadir o texto,
+     e como a imagem é object-fit:contain, o anel nunca é cortado (só sobra marfim).
+     Usamos dvh (não vh) para respeitar a barra do Safari no iOS. */
+  width:min(94vw, 460px);
+  height:min(94vw, 460px, calc(100dvh - 505px));
+  overflow:hidden;         /* recorta a imagem ao card arredondado (evita vazamento branco no Safari) */
   border-radius:22px;
   background:radial-gradient(circle at 32% 26%, #fbf7ee, #eee3cd 80%);
   border:1px solid rgba(201,162,75,0.6);
@@ -413,7 +433,7 @@ html,body{
 
 @media (min-width:720px){
   .panel{ max-width:640px; margin:0 auto; width:100%; }
-  .frame{ width:min(52vh, 380px); }
+  .frame{ width:min(52vh, 380px); height:min(52vh, 380px); }
   .desc{ max-width:56ch; }
 }
 
@@ -442,10 +462,10 @@ html,body{
   touch-action:none;          /* nós tratamos a pinça no JS */
 }
 .lb-card{
-  width:min(92vw, 88vh);
-  aspect-ratio:1/1;
-  max-width:92vw;
-  max-height:84vh;
+  /* mesmo princípio da moldura do produto: quadrado por largura=altura, sem % de altura */
+  width:min(92vw, 82vh);
+  height:min(92vw, 82vh);
+  overflow:hidden;
   display:flex;
   align-items:center;
   justify-content:center;

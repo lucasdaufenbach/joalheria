@@ -206,6 +206,8 @@ const pointers = new Map();
 let startDist = 0, startScale = 1;      // estado no início da pinça
 let panStart = null;                    // {x,y,tx,ty} no início do arraste
 let lastTap = 0;
+let downX = 0, downY = 0;                // ponto onde o toque começou
+let gestureMoved = false;               // virou true se houve arraste/pinça (não é um toque simples)
 
 function applyTransform() {
   lbCard.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
@@ -238,8 +240,11 @@ lbStage.addEventListener("pointerdown", (e) => {
     startDist = dist(p1, p2);
     startScale = scale;
     panStart = null;
+    gestureMoved = true;                 // dois dedos = gesto, nunca "toque para fechar"
   } else if (pointers.size === 1) {
     panStart = { x: e.clientX, y: e.clientY, tx, ty };
+    downX = e.clientX; downY = e.clientY;
+    gestureMoved = false;
     // detecção de toque duplo
     const now = Date.now();
     if (now - lastTap < 300) {
@@ -256,6 +261,7 @@ lbStage.addEventListener("pointerdown", (e) => {
 lbStage.addEventListener("pointermove", (e) => {
   if (!pointers.has(e.pointerId)) return;
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (Math.hypot(e.clientX - downX, e.clientY - downY) > 8) gestureMoved = true;
 
   if (pointers.size === 2) {
     const [p1, p2] = [...pointers.values()];
@@ -273,9 +279,18 @@ lbStage.addEventListener("pointermove", (e) => {
 });
 
 function endPointer(e) {
+  const upX = e.clientX, upY = e.clientY;
   pointers.delete(e.pointerId);
   if (pointers.size < 2) startDist = 0;
-  if (pointers.size === 0) panStart = null;
+  if (pointers.size === 0) {
+    panStart = null;
+    // toque simples fora da moldura → fecha (igual ao X)
+    if (!gestureMoved) {
+      const r = lbCard.getBoundingClientRect();
+      const foraDaMoldura = upX < r.left || upX > r.right || upY < r.top || upY > r.bottom;
+      if (foraDaMoldura) { closeLightbox(); return; }
+    }
+  }
   if (scale <= 1) { tx = 0; ty = 0; applyTransform(); }
 }
 lbStage.addEventListener("pointerup", endPointer);
@@ -298,7 +313,6 @@ lbStage.addEventListener("wheel", (e) => {
 }, { passive: false });
 
 lbClose.addEventListener("click", closeLightbox);
-lb.addEventListener("click", (e) => { if (e.target === lb) closeLightbox(); });
 
 // ---------- modal de confirmação antes do WhatsApp ----------
 const confirmEl = document.getElementById("confirm");
