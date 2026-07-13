@@ -62,9 +62,14 @@ function estimate(idx){
   return formatBRL(idx * GOLD_PRICE_PER_GRAM * MARGIN);
 }
 
-function waLink(product){
-  const msg = `Olá! Tenho interesse no anel de formatura "${product.name}" (código ${product.code}). Poderiam me passar um orçamento?`;
+function waLink(product, gold, stone){
+  const msg = `Olá! Tenho interesse no anel de formatura "${product.name}" (código ${product.code}), em ouro ${gold}k com pedra ${stone.toLowerCase()}. Poderiam me passar um orçamento?`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+}
+
+function setActive(btn){
+  btn.parentElement.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
 }
 
 const productsContainer = document.getElementById("products");
@@ -81,30 +86,42 @@ PRODUCTS.forEach((p, i) => {
   slide.innerHTML = `
     <span class="codebadge">${p.code}</span>
     <div class="stage">
-      <div class="frame"><img src="${p.image}" alt="${p.name}"></div>
+      <div class="frame" data-zoom="${p.image}" role="button" tabindex="0" aria-label="Ampliar foto de ${p.name}">
+        <img src="${p.image}" alt="${p.name}">
+        <span class="zoom-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>Ampliar</span>
+      </div>
     </div>
     <div class="panel">
       <div class="eyebrow">Anel de Formatura · Medicina</div>
       <h2>${p.name}</h2>
       <p class="desc">${p.desc}</p>
-      <div class="specs">
-        ${p.specs.map(([label, value]) => `<div class="spec"><span class="k">${label}</span><span class="v">${value}</span></div>`).join("")}
+      <div class="options">
+        <div class="opt-row">
+          <span class="opt-label">Ouro</span>
+          <div class="seg" data-gold>
+            <button class="active" data-k="10">10k</button>
+            <button data-k="18">18k</button>
+          </div>
+        </div>
+        <div class="opt-row">
+          <span class="opt-label">Pedra</span>
+          <div class="seg" data-stone>
+            <button class="active" data-s="Natural">Natural</button>
+            <button data-s="Sintética">Sintética</button>
+          </div>
+        </div>
       </div>
       <div class="pricebar">
-        <div class="gold-toggle" data-toggle>
-          <button class="active" data-k="10">Ouro 10k</button>
-          <button data-k="18">Ouro 18k</button>
-        </div>
+        <div class="price-label">A partir de</div>
         <div class="price">
-          <div class="price-label">A partir de</div>
           <div class="price-value" data-price>${estimate(p.idx10)}</div>
           <div class="price-est">valor estimado</div>
         </div>
       </div>
-      <a class="cta" href="${waLink(p)}" target="_blank" rel="noopener">
+      <button class="cta" data-cta type="button">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1s-.8 1-.9 1.2c-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5C10 9 9.5 7.6 9.3 7c-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-1 1-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.9.5 3.6 1.5 5.2L2 22l4.9-1.5c1.5.8 3.2 1.3 5.1 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2zm0 18c-1.7 0-3.3-.5-4.7-1.3l-.3-.2-3 .9.9-2.9-.2-.3C3.8 14.7 3.3 13.4 3.3 12c0-4.8 3.9-8.7 8.7-8.7s8.7 3.9 8.7 8.7-3.9 8.7-8.7 8.7z"/></svg>
         Falar com vendedor
-      </a>
+      </button>
     </div>
   `;
 
@@ -113,15 +130,32 @@ PRODUCTS.forEach((p, i) => {
   const dot = document.createElement("i");
   progressContainer.appendChild(dot);
 
-  const toggle = slide.querySelector("[data-toggle]");
+  let curGold = 10, curStone = "Natural";
   const priceEl = slide.querySelector("[data-price]");
-  toggle.addEventListener("click", (e) => {
+
+  slide.querySelector("[data-gold]").addEventListener("click", (e) => {
     const btn = e.target.closest("button");
     if (!btn) return;
-    toggle.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
-    btn.classList.add("active");
-    const idx = btn.dataset.k === "10" ? p.idx10 : p.idx18;
-    priceEl.textContent = estimate(idx);
+    curGold = Number(btn.dataset.k);
+    setActive(btn);
+    priceEl.textContent = estimate(curGold === 10 ? p.idx10 : p.idx18);
+  });
+
+  slide.querySelector("[data-stone]").addEventListener("click", (e) => {
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    curStone = btn.dataset.s;
+    setActive(btn);
+  });
+
+  slide.querySelector("[data-cta]").addEventListener("click", () => {
+    openConfirm(waLink(p, curGold, curStone));
+  });
+
+  const frame = slide.querySelector(".frame");
+  frame.addEventListener("click", () => openLightbox(p.image, p.name));
+  frame.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openLightbox(p.image, p.name); }
   });
 });
 
@@ -143,3 +177,138 @@ const io = new IntersectionObserver(
 );
 
 allSlides.forEach((s) => io.observe(s));
+
+// ---------- lightbox com pinça / zoom / arraste ----------
+const lb = document.getElementById("lightbox");
+const lbStage = document.getElementById("lbStage");
+const lbImg = document.getElementById("lbImg");
+const lbClose = document.getElementById("lbClose");
+const lbHint = document.getElementById("lbHint");
+
+let scale = 1, tx = 0, ty = 0;
+const MIN_SCALE = 1, MAX_SCALE = 5;
+const pointers = new Map();
+let startDist = 0, startScale = 1;      // estado no início da pinça
+let panStart = null;                    // {x,y,tx,ty} no início do arraste
+let lastTap = 0;
+
+function applyTransform() {
+  lbImg.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+}
+function resetTransform() { scale = 1; tx = 0; ty = 0; applyTransform(); }
+
+function openLightbox(src, alt) {
+  lbImg.src = src;
+  lbImg.alt = alt || "";
+  resetTransform();
+  lb.classList.add("open");
+  lb.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+function closeLightbox() {
+  lb.classList.remove("open");
+  lb.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  pointers.clear();
+}
+
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+lbStage.addEventListener("pointerdown", (e) => {
+  lbStage.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size === 2) {
+    const [p1, p2] = [...pointers.values()];
+    startDist = dist(p1, p2);
+    startScale = scale;
+    panStart = null;
+  } else if (pointers.size === 1) {
+    panStart = { x: e.clientX, y: e.clientY, tx, ty };
+    // detecção de toque duplo
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      scale = scale > 1 ? 1 : 2.5;
+      if (scale === 1) { tx = 0; ty = 0; }
+      applyTransform();
+      lastTap = 0;
+    } else {
+      lastTap = now;
+    }
+  }
+});
+
+lbStage.addEventListener("pointermove", (e) => {
+  if (!pointers.has(e.pointerId)) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pointers.size === 2) {
+    const [p1, p2] = [...pointers.values()];
+    const d = dist(p1, p2);
+    if (startDist > 0) {
+      scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, startScale * (d / startDist)));
+      if (scale === 1) { tx = 0; ty = 0; }
+      applyTransform();
+    }
+  } else if (pointers.size === 1 && panStart && scale > 1) {
+    tx = panStart.tx + (e.clientX - panStart.x);
+    ty = panStart.ty + (e.clientY - panStart.y);
+    applyTransform();
+  }
+});
+
+function endPointer(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) startDist = 0;
+  if (pointers.size === 0) panStart = null;
+  if (scale <= 1) { tx = 0; ty = 0; applyTransform(); }
+}
+lbStage.addEventListener("pointerup", endPointer);
+lbStage.addEventListener("pointercancel", endPointer);
+
+// duplo clique no desktop
+lbStage.addEventListener("dblclick", (e) => {
+  e.preventDefault();
+  scale = scale > 1 ? 1 : 2.5;
+  if (scale === 1) { tx = 0; ty = 0; }
+  applyTransform();
+});
+
+// zoom com a roda do mouse (desktop)
+lbStage.addEventListener("wheel", (e) => {
+  e.preventDefault();
+  scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale - e.deltaY * 0.0015));
+  if (scale === 1) { tx = 0; ty = 0; }
+  applyTransform();
+}, { passive: false });
+
+lbClose.addEventListener("click", closeLightbox);
+lb.addEventListener("click", (e) => { if (e.target === lb) closeLightbox(); });
+
+// ---------- modal de confirmação antes do WhatsApp ----------
+const confirmEl = document.getElementById("confirm");
+const confirmOk = document.getElementById("confirmOk");
+const confirmCancel = document.getElementById("confirmCancel");
+let pendingWa = null;
+
+function openConfirm(link) {
+  pendingWa = link;
+  confirmEl.classList.add("open");
+  confirmEl.setAttribute("aria-hidden", "false");
+}
+function closeConfirm() {
+  confirmEl.classList.remove("open");
+  confirmEl.setAttribute("aria-hidden", "true");
+  pendingWa = null;
+}
+confirmOk.addEventListener("click", () => {
+  const link = pendingWa;
+  closeConfirm();
+  if (link) window.open(link, "_blank", "noopener");
+});
+confirmCancel.addEventListener("click", closeConfirm);
+confirmEl.addEventListener("click", (e) => { if (e.target === confirmEl) closeConfirm(); });
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { closeLightbox(); closeConfirm(); }
+});
