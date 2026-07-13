@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js / build output (fase B)
+.next/
+out/
+build/
+dist/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Database local (fase B)
+*.db
+*.sqlite
+prisma/dev.db
+
+# Logs
+*.log
+
+# Material-fonte sensível (índices de preço da fábrica, fotos originais)
+# Fica só na máquina local — nunca publicado.
+/fontes/
+
+# Dados sensíveis do negócio — NUNCA versionar (defesa extra, valem em qualquer pasta)
+# Catálogos/tabelas de preço e índices da fábrica:
+Aneis.pdf
+catalogo-precos-fabrica.pdf
+**/catalogo-precos*
+# Todo PDF neste projeto é material-fonte de preço.
+# Remova a linha abaixo se um dia precisar versionar algum PDF público.
+*.pdf
+# Planilhas de preço/índices, se existirem:
+*preco*.xlsx
+*preco*.csv
+*indice*.xlsx
+*indice*.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temp
+*.tmp
