@@ -431,10 +431,74 @@ body::-webkit-scrollbar,
   *{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
 }
 
-@media (min-width:720px){
-  .panel{ max-width:640px; margin:0 auto; width:100%; }
-  .frame{ width:min(52vh, 380px); height:min(52vh, 380px); }
-  .desc{ max-width:56ch; }
+/* ---------- Tablet / iPad em RETRATO: mesmo feed vertical, porém mais largo ---------- */
+@media (min-width:768px) and (orientation:portrait){
+  .panel{ max-width:600px; margin:0 auto; width:100%; }
+  .panel h2{ font-size:34px; }
+  .desc{ max-width:58ch; font-size:14px; }
+  .price-value{ font-size:34px; }
+  .price-label,.opt-label{ font-size:12px; }
+  .seg button{ font-size:12px; padding:8px 20px; }
+  .eyebrow{ font-size:11px; }
+  .frame{
+    width:min(80vw, 560px);
+    height:min(80vw, 560px, calc(100dvh - 540px));
+  }
+}
+
+/* ---------- Desktop / tablet na HORIZONTAL (largura > altura):
+     foto ao lado do texto, alternando o lado a cada produto ---------- */
+@media (min-aspect-ratio:1/1) and (min-width:820px) and (min-height:560px){
+  .product{
+    flex-direction:row;                 /* padrão: foto à esquerda, texto à direita */
+    align-items:center;
+    justify-content:center;             /* centraliza o par foto+texto: sobra só nas bordas externas */
+    gap:clamp(24px, 2.4vw, 52px);       /* distância REAL entre foto e texto (o lado interno) */
+    padding:56px clamp(32px, 5vw, 88px) 48px;
+  }
+  /* 1º, 3º, 5º produto invertem: foto à DIREITA, texto à esquerda (e alterna) */
+  #products .product:nth-child(odd){ flex-direction:row-reverse; }
+
+  /* colunas encolhem até o conteúdo — elimina o vazio no lado interno da foto */
+  .stage{
+    flex:0 0 auto;
+    height:auto;
+    min-height:0;
+    padding:0;
+  }
+  .frame{
+    width:min(44vw, 76vh);
+    height:min(44vw, 76vh);
+  }
+  .panel{
+    flex:0 0 auto;
+    width:min(42vw, 560px);
+    margin:0;
+    padding:0;
+    /* mesma altura da foto: 1º elemento alinha no topo, botão vai para a base */
+    height:min(44vw, 76vh);
+    display:flex;
+    flex-direction:column;
+  }
+  /* empurra o bloco de compra (opções + preço + botão) para a base da foto,
+     mantendo a descrição no topo — botão alinha com a base da foto */
+  .panel .options{ margin-top:auto; }
+
+  /* fontes e botão maiores — sobra espaço no modo deitado */
+  .eyebrow{ font-size:12px; letter-spacing:.22em; }
+  .panel h2{ font-size:clamp(36px, 3.4vw, 54px); margin-top:8px; }
+  .desc{ max-width:46ch; font-size:clamp(15px, 1.05vw, 18px); line-height:1.55; margin-top:12px; }
+  .price-label,.opt-label{ font-size:13px; }
+  .price-value{ font-size:clamp(36px, 3vw, 50px); }
+  .price-est{ font-size:10px; }
+  .seg button{ font-size:14px; padding:10px 24px; }
+  .options{ gap:10px; }
+  .pricebar{ margin-top:16px; padding-top:16px; }
+  .cta{ font-size:16.5px; padding:19px 26px; }
+  .cta svg{ width:19px; height:19px; }
+
+  /* o chip de código não cabe bem no layout lado a lado */
+  .product .codebadge{ display:none; }
 }
 
 /* ---------- lightbox / zoom modal ---------- */
