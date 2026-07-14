@@ -506,6 +506,13 @@ body::-webkit-scrollbar,
     width:min(80vw, 560px);
     height:min(80vw, 560px, calc(100dvh - 540px));
   }
+
+  /* hero mais largo — meio-termo entre mobile e desktop */
+  .hero-logo{ width:min(46vw, 380px); }
+  .hero h1{ font-size:clamp(25px, 3.4vw, 34px); max-width:24ch; }
+  .hero .sub{ font-size:12px; letter-spacing:.22em; }
+  .hero-carousel{ width:min(84vw, 760px); height:clamp(180px, 22vh, 240px); margin-top:34px; }
+  .carousel-item{ width:clamp(120px, 18vw, 190px); }
 }
 
 /* ---------- Desktop / tablet na HORIZONTAL (largura > altura):
@@ -794,4 +801,11 @@ body.mode-grid .progress{ display:none; }
   font-size:11px;
   color:var(--gold-soft);
   font-variant-numeric:tabular-nums;
+}
+
+/* grade com 3 colunas quando a largura permite (tablet/desktop) */
+@media (min-width:700px){
+  .grid-wrap{ grid-template-columns:repeat(3, 1fr); max-width:980px; gap:16px; }
+  .gname{ font-size:16px; }
+  .gprice{ font-size:12px; }
 }
