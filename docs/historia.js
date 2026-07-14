@@ -228,7 +228,6 @@ const stage = document.getElementById("storyStage");
 const progressBar = document.getElementById("storyProgress");
 const tapLeft = document.getElementById("tapLeft");
 const tapRight = document.getElementById("tapRight");
-const pauseIndicator = document.getElementById("pauseIndicator");
 const closeBtn = document.getElementById("storyClose");
 const storiesEl = document.getElementById("stories");
 
@@ -247,12 +246,10 @@ SEGMENTS.forEach((seg, i) => {
   slideEls.push(el);
 });
 
-// monta a barra de progresso (um segmento por tela, pequeno respiro entre capítulos)
-let lastChapter = null;
+// monta a barra de progresso (um segmento por tela, mesma margem entre todas)
 const barEls = SEGMENTS.map((seg, i) => {
   const b = document.createElement("div");
   b.className = "seg";
-  if (seg.chapter !== lastChapter) { b.classList.add("chapter-start"); lastChapter = seg.chapter; }
   b.innerHTML = `<div class="fill"></div>`;
   progressBar.appendChild(b);
   return b;
@@ -300,6 +297,10 @@ function goTo(i, { replay = false } = {}) {
   paused = false;
   progressBar.classList.remove("paused");
 
+  // no slide final, libera os links/botões: as zonas de toque ficam por cima
+  // de todo o conteúdo (para navegar tocando em qualquer lugar) e bloqueavam os cliques
+  storiesEl.classList.toggle("no-tap", SEGMENTS[current].type === "end");
+
   if (dur !== Infinity) {
     advanceTimer = setTimeout(next, dur);
   }
@@ -317,13 +318,11 @@ function pauseStory() {
   const elapsed = performance.now() - segStartedAt;
   remaining = Math.max(0, remaining - elapsed);
   progressBar.classList.add("paused");
-  pauseIndicator.classList.add("show");
 }
 function resumeStory() {
   if (!paused) return;
   paused = false;
   progressBar.classList.remove("paused");
-  pauseIndicator.classList.remove("show");
   segStartedAt = performance.now();
   const dur = segDurations[current];
   if (dur !== Infinity) advanceTimer = setTimeout(next, remaining);
