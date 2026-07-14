@@ -43,7 +43,7 @@ const SEGMENTS = [
   {
     type: "text", theme: "dark", chapter: 2,
     body: [
-      "Quando a segunda geração da família entrou na faculdade de Medicina, acompanhamos de perto uma jornada de estudos, plantões, amizades e conquistas.",
+      "Quando a terceira geração da família entrou na faculdade de Medicina, acompanhamos de perto uma jornada de estudos, plantões, amizades e conquistas.",
     ],
   },
   {
