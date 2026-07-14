@@ -74,7 +74,10 @@ body::-webkit-scrollbar,
   flex-direction:column;
   gap:9px;
   z-index:40;
+  opacity:1;
+  transition:opacity .4s var(--ease);
 }
+.progress.hidden{ opacity:0; pointer-events:none; }
 .progress i{
   width:4px; height:4px;
   border-radius:50%;
@@ -184,7 +187,7 @@ body::-webkit-scrollbar,
   align-items:center;
   gap:8px;
   opacity:0;
-  animation:riseIn .9s var(--ease) 1.1s forwards;
+  animation:riseIn .9s var(--ease) 1.3s forwards;
 }
 .scroll-hint span{
   font-size:10px;
@@ -196,6 +199,65 @@ body::-webkit-scrollbar,
 
 @keyframes riseIn{ from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:translateY(0);} }
 @keyframes bob{ 0%,100%{transform:translateY(0);opacity:.5;} 50%{transform:translateY(6px);opacity:1;} }
+
+/* ---------- hero carousel (coverflow 3D) ---------- */
+.hero-carousel{
+  position:relative;
+  width:min(94vw, 640px);
+  height:clamp(150px, 24vh, 220px);
+  margin-top:30px;
+  perspective:1200px;
+  opacity:0;
+  animation:riseIn .9s var(--ease) .95s forwards;
+}
+.carousel-track{
+  position:absolute;
+  inset:0;
+  transform-style:preserve-3d;
+  touch-action:pan-y;
+  cursor:grab;
+}
+.hero-carousel.dragging .carousel-track{ cursor:grabbing; }
+.carousel-item{
+  position:absolute;
+  left:50%; top:50%;
+  width:clamp(108px, 28vw, 168px);
+  aspect-ratio:1/1;
+  border-radius:16px;
+  background:radial-gradient(circle at 32% 26%, #fbf7ee, #eee3cd 80%);
+  border:1px solid rgba(201,162,75,0.55);
+  box-shadow:0 16px 34px rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:5%;
+  overflow:hidden;
+  will-change:transform, opacity;
+  /* transição suave na troca de posição/escala/rotação — sem isso a troca era instantânea */
+  transition:transform .6s var(--ease), opacity .5s var(--ease);
+}
+.hero-carousel.dragging .carousel-item{ transition:none !important; }
+.carousel-item img{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+  mix-blend-mode:multiply;
+  user-select:none;
+  -webkit-user-drag:none;
+  pointer-events:none;
+  /* as fotos-fonte já têm bastante margem branca própria; aproxima para o anel
+     ficar proporcional ao resto do site (o quadro corta o excesso com overflow:hidden) */
+  transform:scale(1.42);
+}
+
+/* hero mais largo em telas paisagem (tablet/desktop deitados) */
+@media (min-aspect-ratio:1/1) and (min-width:820px){
+  .hero h1{ font-size:clamp(26px, 2.6vw, 38px); max-width:26ch; }
+  .hero-logo{ width:min(30vw, 340px); }
+  .hero .sub{ font-size:12px; letter-spacing:.24em; }
+  .hero-carousel{ width:min(72vw, 900px); height:clamp(190px, 30vh, 260px); margin-top:36px; }
+  .carousel-item{ width:clamp(130px, 15vw, 200px); }
+}
 
 /* ---------- product slide ---------- */
 .product{ justify-content:flex-start; }
