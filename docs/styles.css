@@ -113,6 +113,27 @@ body::-webkit-scrollbar,
   color:var(--gold-soft);
   text-transform:uppercase;
 }
+.topbar-right{
+  pointer-events:auto;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.story-link{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:34px; height:34px;
+  border:1px solid var(--line);
+  border-radius:50%;
+  color:var(--gold-soft);
+  background:rgba(6,35,27,0.55);
+  transition:all .3s var(--ease);
+}
+.story-link:hover{ border-color:rgba(201,162,75,0.55); background:rgba(6,35,27,0.75); }
+.story-link:active{ transform:scale(.94); }
+.story-link svg{ width:16px; height:16px; }
+
 .view-toggle{
   pointer-events:auto;
   display:flex;

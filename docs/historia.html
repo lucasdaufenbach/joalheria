@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Por que uma joalheria de Criciúma decidiu criar uma coleção exclusiva para médicos? — Daleffe</title>
+<meta name="description" content="A história por trás da coleção Daleffe para Medicina.">
+<link rel="stylesheet" href="historia.css?v=1">
+</head>
+<body>
+
+<div class="backdrop"></div>
+
+<main class="stories" id="stories" aria-label="Nossa história, em capítulos">
+
+  <!-- barra de progresso (preenchida via JS, um segmento por tela) -->
+  <div class="story-progress" id="storyProgress"></div>
+
+  <div class="story-topbar">
+    <div class="story-brand">DALEFFE</div>
+    <button class="story-close" id="storyClose" aria-label="Sair">&times;</button>
+  </div>
+
+  <!-- slides injetados via historia.js a partir do array SEGMENTS -->
+  <div class="story-stage" id="storyStage"></div>
+
+  <!-- zonas de toque: esquerda = voltar, direita = avançar. segurar em qualquer lugar = pausa -->
+  <div class="tap-zone tap-left" id="tapLeft" aria-hidden="true"></div>
+  <div class="tap-zone tap-right" id="tapRight" aria-hidden="true"></div>
+
+  <div class="pause-indicator" id="pauseIndicator" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+  </div>
+
+</main>
+
+<script src="historia.js?v=1"></script>
+</body>
+</html>
