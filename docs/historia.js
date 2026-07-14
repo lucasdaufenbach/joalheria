@@ -24,7 +24,7 @@ const SEGMENTS = [
   {
     type: "timeline", theme: "dark", chapter: 1,
     caption: "Para ser mais exatos:",
-    year: "1974",
+    year: "1971",
     desc: "Nasce a Relojoaria Daleffe.",
     duration: 4200,
   },
@@ -116,7 +116,7 @@ const SEGMENTS = [
   },
   {
     type: "end", theme: "dark", chapter: 8,
-    tagline: "Desde 1974, celebrando histórias.\nAgora também fazendo parte da sua.",
+    tagline: "Desde 1971, celebrando histórias.\nAgora também fazendo parte da sua.",
     duration: Infinity,
   },
 ];
