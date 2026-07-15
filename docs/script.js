@@ -179,6 +179,7 @@ function setActive(btn){
 const productsContainer = document.getElementById("products");
 const progressContainer = document.getElementById("progress");
 const gridWrap = document.getElementById("gridWrap");
+const gridViewEl = document.getElementById("gridView");
 
 // hero dot
 progressContainer.appendChild(Object.assign(document.createElement("i"), { className: "active" }));
@@ -277,26 +278,30 @@ PRODUCTS.forEach((p, i) => {
   gridWrap.appendChild(gcard);
 });
 
-// ---------- entrance animation + progress dots via IntersectionObserver ----------
-const allSlides = Array.from(document.querySelectorAll(".slide"));
+// ---------- paginação vertical do feed (controlada via JS, sem scroll-snap nativo) ----------
+const allSlides = Array.from(document.querySelectorAll(".slide"));   // [hero, p-0, p-1, ...]
 const allDots = Array.from(progressContainer.children);
+const feedTrack = document.getElementById("feedTrack");
 
-const io = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      const idx = allSlides.indexOf(entry.target);
-      if (entry.isIntersecting) {
-        entry.target.classList.add("in-view");
-        allDots.forEach((d, i) => d.classList.toggle("active", i === idx));
-        // esconde as bolinhas de progresso enquanto estiver na primeira tela (hero)
-        progressContainer.classList.toggle("hidden", idx === 0);
-      }
-    });
-  },
-  { threshold: 0.6 }
-);
+let activeSlide = 0;
 
-allSlides.forEach((s) => io.observe(s));
+function updateActiveSlideUI() {
+  allSlides.forEach((s, i) => s.classList.toggle("in-view", i === activeSlide));
+  allDots.forEach((d, i) => d.classList.toggle("active", i === activeSlide));
+  progressContainer.classList.toggle("hidden", activeSlide === 0);
+}
+
+function goToIndex(i, opts = {}) {
+  i = Math.max(0, Math.min(allSlides.length - 1, i));
+  activeSlide = i;
+  feedTrack.style.transition = opts.instant ? "none" : "transform .45s cubic-bezier(.22,.61,.36,1)";
+  feedTrack.style.transform = `translateY(${-i * feedEl.clientHeight}px)`;
+  updateActiveSlideUI();
+}
+
+updateActiveSlideUI();
+// realinha a posição se a altura visível da tela mudar (barra do navegador, rotação etc.)
+window.addEventListener("resize", () => goToIndex(activeSlide, { instant: true }));
 
 // ---------- lightbox com pinça / zoom / arraste ----------
 const lb = document.getElementById("lightbox");
@@ -458,16 +463,131 @@ function setView(view) {
 }
 function goToProduct(i) {
   setView("feed");
-  const slide = document.getElementById("p-" + i);
-  requestAnimationFrame(() => {
-    feedEl.scrollTo({ top: slide.offsetTop, behavior: "instant" });
-    slide.classList.add("in-view");
-  });
+  goToIndex(i + 1, { instant: true });   // +1 porque o índice 0 do feed é o hero
 }
 viewToggle.addEventListener("click", (e) => {
   const btn = e.target.closest("button");
   if (btn) setView(btn.dataset.view);
 });
+
+// ---------- gesto único do feed: vertical pagina os slides (1:1, sem scroll nativo) ·
+// horizontal estilo Instagram (esquerda→direita abre a história · direita→esquerda abre a grade) ----------
+(() => {
+  const H_MIN_DX = 80, H_RATIO = 2.4, H_COMMIT = 24;   // limiares do gesto horizontal
+  const V_COMMIT = 10, V_RATIO = 1.3;                   // limiares do gesto vertical
+  const FLICK_VELOCITY = 0.5;                           // px/ms — a partir daqui conta como "puxão" rápido
+  const EDGE_RESISTANCE = 0.35;                          // resistência ao arrastar além do 1º/último slide
+
+  let downX = 0, downY = 0, axis = null, baseY = 0, tracking = false;
+  let samples = [];
+
+  feedEl.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#heroCarousel")) return;   // o carrossel do hero tem seu próprio arraste
+    if (document.body.classList.contains("mode-grid")) return;
+    downX = e.clientX; downY = e.clientY;
+    axis = null;
+    tracking = true;
+    baseY = -activeSlide * feedEl.clientHeight;
+    feedTrack.style.transition = "none";
+    samples = [{ t: performance.now(), y: e.clientY }];
+  });
+
+  feedEl.addEventListener("pointermove", (e) => {
+    if (!tracking) return;
+    const dx = e.clientX - downX;
+    const dy = e.clientY - downY;
+
+    if (axis === null) {
+      if (Math.abs(dy) > V_COMMIT && Math.abs(dy) > Math.abs(dx) * V_RATIO) axis = "v";
+      else if (Math.abs(dx) > H_COMMIT && Math.abs(dx) > Math.abs(dy) * H_RATIO) axis = "h";
+    }
+
+    if (axis === "v") {
+      if (e.cancelable) e.preventDefault();
+      let ny = baseY + dy;
+      const min = -(allSlides.length - 1) * feedEl.clientHeight, max = 0;
+      if (ny > max) ny = max + (ny - max) * EDGE_RESISTANCE;
+      if (ny < min) ny = min + (ny - min) * EDGE_RESISTANCE;
+      feedTrack.style.transform = `translateY(${ny}px)`;
+      samples.push({ t: performance.now(), y: e.clientY });
+      if (samples.length > 6) samples.shift();
+    } else if (axis === "h") {
+      if (e.cancelable) e.preventDefault();
+    }
+  }, { passive: false });
+
+  function finish(e) {
+    if (!tracking) return;
+    tracking = false;
+    if (axis === "v") {
+      const first = samples[0], last = samples[samples.length - 1] || first;
+      const dt = Math.max(1, last.t - first.t);
+      const vy = (last.y - first.y) / dt;             // negativo = arrastando pra cima
+      const dy = e.clientY - downY;
+      let target = activeSlide;
+      if (Math.abs(vy) > FLICK_VELOCITY) target += vy < 0 ? 1 : -1;
+      else if (Math.abs(dy) > feedEl.clientHeight * 0.22) target += dy < 0 ? 1 : -1;
+      goToIndex(target);                               // uma única animação decide e resolve
+    } else if (axis === "h") {
+      const dx = e.clientX - downX;
+      if (Math.abs(dx) >= H_MIN_DX) {
+        if (dx > 0) {
+          document.body.classList.add("leaving-to-story");
+          setTimeout(() => { window.location.href = "historia.html"; }, 300);
+        } else {
+          setView("grid");
+        }
+      }
+    }
+    axis = null;
+  }
+  feedEl.addEventListener("pointerup", finish);
+  feedEl.addEventListener("pointercancel", () => { tracking = false; axis = null; });
+
+  // roda do mouse / trackpad (desktop) — pagina um slide por vez
+  let wheelLocked = false;
+  feedEl.addEventListener("wheel", (e) => {
+    if (document.body.classList.contains("mode-grid")) return;
+    e.preventDefault();
+    if (wheelLocked) return;
+    if (Math.abs(e.deltaY) < 4) return;
+    wheelLocked = true;
+    goToIndex(activeSlide + (e.deltaY > 0 ? 1 : -1));
+    setTimeout(() => { wheelLocked = false; }, 420);
+  }, { passive: false });
+})();
+
+// ---------- grade: arrastar da esquerda p/ direita fecha e volta ao feed ----------
+(() => {
+  const SWIPE_MIN_DX = 80, SWIPE_RATIO = 2.4, COMMIT_DX = 24;
+  let sx = 0, sy = 0, tracking = false, horizontal = false;
+
+  gridViewEl.addEventListener("pointerdown", (e) => {
+    sx = e.clientX; sy = e.clientY;
+    tracking = true; horizontal = false;
+  });
+
+  gridViewEl.addEventListener("pointermove", (e) => {
+    if (!tracking) return;
+    const dx = e.clientX - sx;
+    const dy = e.clientY - sy;
+    if (!horizontal && Math.abs(dx) > COMMIT_DX && Math.abs(dx) > Math.abs(dy) * SWIPE_RATIO) {
+      horizontal = true;
+    }
+    if (horizontal && e.cancelable) e.preventDefault();
+  }, { passive: false });
+
+  function finish(e) {
+    if (!tracking) return;
+    tracking = false;
+    if (!horizontal) return;
+    const dx = e.clientX - sx;
+    // mesmo sentido contrário ao que abriu a grade (esquerda → direita fecha)
+    if (dx > SWIPE_MIN_DX) setView("feed");
+  }
+  gridViewEl.addEventListener("pointerup", finish);
+  gridViewEl.addEventListener("pointercancel", () => { tracking = false; });
+})();
 
 // ---------- carrossel do hero (coverflow 3D) ----------
 (() => {

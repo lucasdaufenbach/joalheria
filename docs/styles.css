@@ -28,6 +28,14 @@ html,body{
 
 ::selection{ background:var(--gold); color:#0a2c22; }
 
+/* evita o "arrastar imagem" nativo do navegador atrapalhando os gestos horizontais */
+.hero-logo, .frame img, .gframe img, .carousel-item img{
+  -webkit-user-drag:none;
+  user-drag:none;
+  -webkit-touch-callout:none;
+  user-select:none;
+}
+
 /* esconde a barra de rolagem padrão dos navegadores (mantém o scroll funcional) */
 html, body, .feed, .grid-view, .lb-stage{
   scrollbar-width:none;        /* Firefox */
@@ -42,19 +50,28 @@ body::-webkit-scrollbar,
   width:0; height:0;
 }
 
-/* ---------- feed ---------- */
+/* ---------- feed ----------
+   Paginação 100% controlada via JS (script.js), sem depender do scroll-snap
+   nativo do navegador: o CSS scroll-snap + inércia de toque tem um bug
+   conhecido em navegadores mobile onde a rolagem por momentum toca inteira
+   e SÓ DEPOIS o "encaixe" no slide é aplicado como uma correção separada
+   (a travadinha "roda tudo, depois ajusta"). Controlando tudo via JS,
+   existe só UM movimento: o dedo arrasta em tempo real e, ao soltar, uma
+   única animação decide e leva direto ao slide certo. */
 .feed{
   height:100dvh;
-  overflow-y:scroll;
-  scroll-snap-type:y mandatory;
-  scroll-behavior:smooth;
+  overflow:hidden;
+  position:relative;
+  touch-action:none;         /* o JS controla os dois eixos (paginar e abrir história/grade) */
+}
+.feed-track{
+  position:relative;
+  will-change:transform;
 }
 
 .slide{
   height:100dvh;
   width:100%;
-  scroll-snap-align:start;
-  scroll-snap-stop:always;
   position:relative;
   display:flex;
   flex-direction:column;
@@ -746,22 +763,36 @@ body::-webkit-scrollbar,
   cursor:pointer;
 }
 
-/* ---------- grid view (grade de 2 colunas) ---------- */
+/* ---------- grid view (grade de 2 colunas) — desliza como uma gaveta, da direita ---------- */
 .grid-view{
   position:fixed;
   inset:0;
   z-index:20;
-  display:none;
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
   padding:64px 14px calc(24px + env(safe-area-inset-bottom));
   background:
     radial-gradient(ellipse 90% 30% at 50% 0%, rgba(201,162,75,0.10), transparent 60%),
     linear-gradient(180deg, var(--green-900), var(--green-950) 62%);
+  transform:translateX(100%);
+  transition:transform .45s var(--ease);
+  pointer-events:none;
 }
-body.mode-grid .grid-view{ display:block; }
-body.mode-grid .feed{ display:none; }
+body.mode-grid .grid-view{ transform:translateX(0); pointer-events:auto; }
 body.mode-grid .progress{ display:none; }
+
+/* a página por trás recua e escurece levemente, dando profundidade à transição */
+.feed{ transition:transform .45s var(--ease), opacity .45s var(--ease); }
+body.mode-grid .feed{ transform:translateX(-6%); opacity:.5; pointer-events:none; }
+
+/* deslize de saída para a página de história (nunca instantâneo) */
+body.leaving-to-story .feed{
+  transition:transform .32s var(--ease), opacity .32s var(--ease);
+  transform:translateX(28%);
+  opacity:.15;
+  pointer-events:none;
+}
 
 .grid-caption{
   text-align:center;
